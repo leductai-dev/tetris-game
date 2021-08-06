@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background: url("https://cdnb.artstation.com/p/assets/images/images/026/540/413/large/vinayak-chetti-main-file.jpg?1589045389");
+            background-size: cover;
+        }
+
+        canvas {
+
+            margin: 0 auto;
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+        }
+
+        .score {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>HI</h1>
+    <div class="score">
+        0
+    </div>
+
+</body>
+
+<script src="./constant.js"></script>
+<script src="./dot.js"></script>
+<script src="./brick.js"></script>
+<script src="./board.js"></script>
+<script src="./game.js"></script>
+<script>
+
+
+
+
+    const GAME_WIDTH = 300; const GAME_HEIGHT = 600;
+    const CANVAS_WIDTH = 500; const CANVAS_HEIGHT = 600;
+    class screen {
+        constructor(game) {
+            this.game = game
+            this.score = 0
+            this.level = 0
+            this.data = null
+            this.init()
+        }
+        init() {
+
+        }
+        draw() {
+            this.game.roundRect(GAME_WIDTH + 20, 0, 190, GAME_HEIGHT, 0);
+            this.game.context.fillStyle = "#87CC39";
+            this.game.context.fill();
+
+
+            this.game.roundRect(GAME_WIDTH + 40, 20, 140, 120, 10);
+            this.game.context.fillStyle = "#292B39";
+            this.game.context.fill();
+
+            this.game.roundRect(GAME_WIDTH + 40, 180, 140, 120, 10);
+            this.game.context.fillStyle = "green";
+            this.game.context.fill();
+
+            this.game.roundRect(GAME_WIDTH + 40, 340, 140, 120, 10);
+            this.game.context.fillStyle = "#237CCE";
+            this.game.context.fill();
+
+
+            this.game.context.font = '25px Segoe UI, sans-serif';
+            // this.game.context.textAlign = "left";
+            this.game.context.fillStyle = "#fff";
+            this.game.context.fillText('Score', GAME_WIDTH + 78, 210);
+            this.game.context.font = '35px Segoe UI, sans-serif';
+            this.game.context.fillText(this.score, GAME_WIDTH + 90, 260);
+            this.game.context.font = '25px Segoe UI, sans-serif';
+            this.game.context.fillText('Level', GAME_WIDTH + 78, 370);
+            this.game.context.font = '35px Segoe UI, sans-serif';
+            this.game.context.fillText(this.level, GAME_WIDTH + 90, 420);
+
+            if (this.data) {
+                for (let row = 0; row < this.data.length; row++) {
+                    for (let col = 0; col < this.data[row].length; col++) {
+                        if (this.data[row][col] != false) {
+                            var mydot = new dot(this.game, row, col, this.data[row][col], 20)
+                            mydot.drawNextData()
+                        }
+                    }
+                }
+            }
+
+
+        }
+        update() {
+            this.level = Math.floor(this.score / 500)
+        }
+        loop() {
+            this.draw()
+            this.update()
+        }
+    }
+    class sound {
+        constructor(fileName) {
+            this.fileName = fileName
+            this.loaded = false
+            this.audio = new Audio('sound/' + this.fileName)
+            this.audio.addEventListener('canplaythrough', () => {
+                this.loaded = true
+            })
+        }
+        start() {
+            if (this.loaded) {
+                if (this.audio.duration > 0) {
+                    this.audio.currentTime = 0
+                }
+                this.audio.currentTime = 0
+                this.audio.play()
+            }
+        }
+        onEnd(callback) {
+            if (typeof callback == 'function') {
+                this.audio.onended = callback
+            }
+        }
+        stop() {
+
+        }
+    }
+
+    class dot {
+        constructor(game, row, col, color, size = 30) {
+            this.game = game;
+            this.size = size;
+            this.row = row;
+            this.col = col;
+            this.color = color;
+            this.radius = 2;
+        }
+        moveLeft() {
+
+        }
+        moveRight() {
+
+        }
+        draw() {
+
+            // this.game.context.fillRect(this.col * this.size + 1, this.row * this.size + 1, this.size - 1, this.size - 1);
+            let width = this.size - 1
+            let height = this.size - 1
+            let x = this.col * this.size + 1
+            let y = this.row * this.size + 1
+            let radius = this.radius
+            if (width < 2 * radius) radius = width / 2;
+            if (height < 2 * radius) radius = height / 2;
+            this.game.context.beginPath();
+            this.game.context.moveTo(x + radius, y);
+            this.game.context.arcTo(x + width, y, x + width, y + height, radius);
+            this.game.context.arcTo(x + width, y + height, x, y + height, radius);
+            this.game.context.arcTo(x, y + height, x, y, radius);
+            this.game.context.arcTo(x, y, x + width, y, radius);
+            this.game.context.closePath();
+            this.game.context.fillStyle = this.color || "red";
+            this.game.context.fill();
+        }
+        drawBackground() {
+            this.game.context.fillStyle = this.color || "red";
+            this.game.context.fillRect(this.col * this.size + 1, this.row * this.size + 1, this.size - 1, this.size - 1);
+        }
+        drawNextData() {
+            this.game.context.fillStyle = this.color || "red";
+            this.game.context.fillRect(GAME_WIDTH + 80 + this.col * this.size + 1, 60 + this.row * this.size + 1, this.size - 1, this.size - 1);
+        }
+        drawFakeBrick() {
+            this.game.context.strokeStyle = this.color;
+            this.game.context.lineWidth = 1;
+            this.game.context.strokeRect(this.col * this.size, this.row * this.size, this.size, this.size);
+
+        }
+    }
+
+
+    class brick {
+        constructor(game) {
+            this.game = game;
+            this.row = 0;
+            this.col = 0;
+            this.data = null
+            this.nextData = null
+            this.brick = []
+            this.fakeBrick = null
+            this.drawFakeBrick = true
+            this.color = null
+            this.speed = 1000
+            this.rotateSound = new sound('rotate-sound.wav')
+            this.hitSound = new sound('hit-sound.wav')
+            this.winningSound = new sound('winning-sound.wav')
+            this.dataModel = [
+                [
+                    ["#237CCE", "#237CCE"],
+                    ["#237CCE", "#237CCE"],
+                ],
+                [
+                    ["#798BDB", "#798BDB", "#798BDB", "#798BDB"],
+                ],
+                [
+                    ["#87CC39", "#87CC39", false],
+                    [false, "#87CC39", "#87CC39"],
+                ],
+                [
+                    [false, "#ED5F4F", "#ED5F4F"],
+                    ["#ED5F4F", "#ED5F4F", false],
+                ],
+                [
+                    ["#5CBDE3", "#5CBDE3", "#5CBDE3"],
+                    [false, "#5CBDE3", false],
+                ],
+                [
+                    ["#FFC53D", false, false],
+                    ["#FFC53D", "#FFC53D", "#FFC53D"],
+                ],
+                [
+                    [false, false, "#F79725"],
+                    ["#F79725", "#F79725", "#F79725"],
+                ],
+            ]
+            this.init()
+        }
+        init() {
+            this.loop()
+            document.addEventListener('keydown', (e) => {
+                switch (e.keyCode) {
+                    case 37: {
+                        this.moveLeft()
+
+                        break;
+
+                    }
+                    case 39: {
+                        this.moveRight()
+                        break;
+
+                    }
+                    case 40: {
+                        this.moveDown()
+                        break;
+
+                    }
+                    case 38: {
+                        this.rotate()
+                        this.rotateSound.start()
+                        break;
+
+                    }
+                    case 32: {
+                        this.hitDown()
+                        this.hitSound.start()
+                        this.saveToBoard()
+                        break;
+
+                    }
+                    default:
+                        break;
+                }
+            })
+        }
+        rotate() {
+            if (this.canfall()) {
+                let brickRotate = []
+                for (let x = 0; x < this.data[0].length; x++) {
+                    brickRotate.push([])
+                }
+                let canRotate = true
+                for (let i = 0, k = 0; i < this.data[0].length; i++, k++) {
+                    for (let j = 0, l = this.data.length - 1; j < this.data.length; j++, l--) {
+                        brickRotate[i][j] = this.data[l][k]
+                        if (this.row + i > 19 || this.game.myboard.board[this.row + i][this.col + j] != false) {
+                            canRotate = false
+                        }
+                    }
+                }
+                if (canRotate) {
+                    this.data = brickRotate
+                    this.brick = []
+                    let _case = null
+                    for (let row = 0; row < this.data.length; row++) {
+                        for (let col = 0; col < this.data[row].length; col++) {
+                            if (this.data[row][col] != false) {
+                                if (this.col + this.data.length > 10 || this.col + this.data[row].length > 10) {
+                                    _case = 'right'
+                                    this.brick.push(new dot(this.game, row + this.row, col + this.col - 1, this.color))
+                                } else if (this.col < 0 || this.col < 0) {
+                                    _case = 'left'
+                                    this.brick.push(new dot(this.game, row + this.row, col + this.col + 1, this.color))
+                                } else {
+                                    this.brick.push(new dot(this.game, row + this.row, col + this.col, this.color))
+                                }
+                            }
+                        }
+                    }
+                    switch (_case) {
+                        case "left": {
+                            this.col += 1
+                            break;
+                        }
+                        case 'right': {
+                            this.col -= 1
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+
+
+
+
+        }
+        calScore() {
+
+        }
+        checkIsFull() {
+            for (let i = 0; i < this.game.myboard.board.length; i++) {
+                let isFull = true
+                for (let j = 0; j < this.game.myboard.board[i].length; j++) {
+                    if (this.game.myboard.board[i][j] == false) {
+                        isFull = false
+                        break
+                    }
+                }
+                if (isFull) {
+                    let miniArr = Array.from(new Array(10)).map(e => false)
+                    this.game.myboard.board.splice(i, 1)
+                    this.game.myboard.board.unshift(miniArr)
+                    this.game.myScreen.score += 100
+                    this.winningSound.start()
+
+                }
+            }
+        }
+        hitDown(bricks = this.brick) {
+            while (this.canfall(bricks)) {
+                this.moveDown(bricks);
+            }
+        }
+        moveRight() {
+            if (this.canMoveRight()) {
+                this.brick.forEach(brick => {
+                    brick.col += 1
+                });
+                this.fakeBrick.forEach(brick => {
+                    brick.col += 1
+                });
+                this.col += 1
+            }
+        }
+        canMoveRight() {
+            let canMoveRight = true
+            this.brick.forEach(dot => {
+                if (dot.col >= 9 || this.game.myboard.board[dot.row][dot.col + 1] != false) {
+                    canMoveRight = false;
+                }
+            })
+            return canMoveRight
+        }
+        moveLeft() {
+            if (this.canMoveLeft()) {
+                this.brick.forEach(brick => {
+                    brick.col -= 1
+                });
+                this.fakeBrick.forEach(brick => {
+                    brick.col -= 1
+                });
+                this.col -= 1
+            }
+        }
+        canMoveLeft() {
+            let canMoveLeft = true
+            this.brick.forEach(brick => {
+                if (brick.col == 0 || this.game.myboard.board[brick.row][brick.col - 1] != false) {
+                    canMoveLeft = false;
+                }
+            })
+            return canMoveLeft
+        }
+        moveDown(bricks = this.brick) {
+            if (this.canfall()) {
+                bricks.forEach(brick => {
+                    brick.row += 1
+                });
+                this.row += 1
+            }
+        }
+        fakehitDown() {
+            while (this.fakecanFall()) {
+                this.fakeBickMoveDown();
+            }
+        }
+        fakeBickMoveDown() {
+            if (this.fakecanFall()) {
+                this.fakeBrick.forEach(brick => {
+                    brick.row += 1
+                });
+            }
+        }
+        fakecanFall() {
+            let isCanFall = true
+            this.fakeBrick.forEach(dot => {
+                if (dot.row >= 19 || this.game.myboard.board[dot.row + 1][dot.col] != false) {
+                    isCanFall = false;
+                }
+            })
+            return isCanFall
+        }
+
+        canfall() {
+            let isCanFall = true
+            this.brick.forEach(dot => {
+                if (dot.row >= 19 || this.game.myboard.board[dot.row + 1][dot.col] != false) {
+                    isCanFall = false;
+                }
+            })
+
+            return isCanFall
+        }
+        saveToBoard() {
+            this.brick.forEach(dot => {
+                this.game.myboard.board[dot.row][dot.col] = dot
+            })
+            this.createNewBrick()
+            this.creatDataNextBrick()
+            this.drawFakeBrick = true
+        }
+        fall() {
+            if (!this.canfall()) {
+                if (this.row == 0) {
+                    this.game.lose = true
+                    return
+                }
+                this.saveToBoard()
+                return
+            }
+            this.moveDown();
+
+        }
+        loop() {
+            setTimeout(() => {
+                this.fall()
+                this.loop()
+
+
+            }, this.speed - this.game.myScreen.level * 100)
+        }
+        createNewBrick() {
+            this.col = 4
+            this.row = 0
+            this.brick = []
+            this.fakeBrick = []
+            this.data = this.nextData ? this.nextData : this.dataModel[Math.floor(Math.random() * 7)]
+
+            for (let row = 0; row < this.data.length; row++) {
+                for (let col = 0; col < this.data[row].length; col++) {
+                    if (this.data[row][col] != false) {
+                        this.color = this.data[row][col]
+                        this.brick.push(new dot(this.game, row, col + this.col, this.color))
+
+
+                    }
+                }
+            }
+
+
+        }
+        creatDataNextBrick() {
+            let random = Math.floor(Math.random() * 7)
+            let dataDots = this.dataModel[random]
+            this.nextData = dataDots
+
+            let rotateTimes = Math.round(Math.random() * 3)
+            while (rotateTimes > 0) {
+                let tmp = []
+                for (let x = 0; x < this.nextData[0].length; x++) {
+                    tmp.push([])
+                }
+                for (let i = 0, k = 0; i < this.nextData[0].length; i++, k++) {
+                    for (let j = 0, l = this.nextData.length - 1; j < this.nextData.length; j++, l--) {
+                        tmp[i][j] = this.nextData[l][k]
+                    }
+                }
+                this.nextData = tmp
+                this.game.myScreen.data = this.nextData
+                rotateTimes--
+            }
+
+
+        }
+
+        draw() {
+
+
+            this.brick.forEach(brick => {
+                brick.draw()
+            });
+            if (this.drawFakeBrick) {
+                this.fakeBrick = this.brick.map(brick => new dot(this.game, brick.row, brick.col, brick.color))
+                this.fakehitDown()
+                this.fakeBrick.forEach(brick2 => {
+                    brick2.drawFakeBrick()
+                });
+            }
+
+        }
+    }
+
+
+    class board {
+        constructor(game) {
+            this.game = game;
+            this.rows = 20
+            this.cols = 10
+            this.board = [
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+                [false, false, false, false, false, false, false, false, false, false],
+            ]
+        }
+        moveLeft() {
+
+        }
+        moveRight() {
+
+        }
+        fall() {
+
+        }
+
+        draw() {
+            for (let row = 0; row < this.rows; row++) {
+                for (let col = 0; col < this.cols; col++) {
+                    if (this.board[row][col] != false) {
+                        var mydot = new dot(this.game, row, col, this.board[row][col].color)
+                        mydot.drawBackground()
+
+                    } else {
+                        var mydot = new dot(this.game, row, col, "#292B39")
+                        mydot.drawBackground()
+
+                    }
+                }
+
+            }
+        }
+    }
+
+    class game {
+        constructor() {
+            this.canvas = null;
+            this.context = null;
+            this.mybrick = null
+            this.lose = false
+            this.gameFame = null
+            this.init();
+        }
+        init() {
+            this.canvas = document.createElement('canvas');
+            this.context = this.canvas.getContext('2d');
+
+            document.body.appendChild(this.canvas);
+            this.canvas.width = CANVAS_WIDTH
+            this.canvas.height = GAME_HEIGHT
+
+            this.myboard = new board(this)
+            this.myScreen = new screen(this)
+            this.createBrick()
+            this.loop();
+        }
+        loop() {
+            this.update();
+            this.draw();
+            this.gameFame = setTimeout(() => this.loop(), 30);
+            this.checkGameOver()
+
+        }
+        update() {
+
+        }
+        roundRect(x, y, width, height, radius) {
+            if (width < 2 * radius) radius = width / 2;
+            if (height < 2 * radius) radius = height / 2;
+            this.context.beginPath();
+            this.context.moveTo(x + radius, y);
+            this.context.arcTo(x + width, y, x + width, y + height, radius);
+            this.context.arcTo(x + width, y + height, x, y + height, radius);
+            this.context.arcTo(x, y + height, x, y, radius);
+            this.context.arcTo(x, y, x + width, y, radius);
+            this.context.closePath();
+            return this;
+        }
+        checkGameOver() {
+            if (this.lose) {
+                clearTimeout(this.gameFame)
+                let cf = confirm("Chơi lại lần nữa?")
+                if (cf === true) {
+                    var game2 = new game()
+                }
+                else {
+                    return
+                }
+            }
+        }
+        createBrick() {
+            this.mybrick = new brick(this)
+            this.mybrick.createNewBrick()
+            this.mybrick.creatDataNextBrick()
+        }
+        clearScreen() {
+            this.context.fillStyle = "black";
+            this.context.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        }
+        draw() {
+            this.clearScreen()
+            this.myScreen.loop()
+            this.mybrick.checkIsFull()
+            this.myboard.draw()
+            this.mybrick.draw()
+            // this.myboard.draw()
+        }
+    }
+    var game2 = new game()
+
+
+
+</script>
+
+</html>
